@@ -16,13 +16,13 @@ exports.LoginHandler = asyncHandler(async (req, res, next) => {
           if (!matching) {
             res.status(403).send({ message: "Password doesn't match" });
           } else {
-            delete user._doc.password && delete user.__v;
+            delete user._doc.password && delete user._doc.__v;
             const token = jwt.sign(
               { id: user.id, role: user.role },
               process.env.TOKEN,
               { expiresIn: "30d" }
             );
-            res.status(200).json({ ...user.toObject(), token });
+            res.status(200).json({...user.toObject(), token });
           }
         }
       })
@@ -47,7 +47,7 @@ exports.RegisterHandler = asyncHandler(async (req, res, next) => {
         password: await bcrypt.hash(password, 10),
         location,
       }).then((user) => {
-        delete user._doc.password && delete user.__v;
+        delete user._doc.password && delete user._doc.__v;
         res.status(201).json(user);
       });
     }
