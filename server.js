@@ -10,9 +10,9 @@ const DB = require("./config/DBConfig");
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (res) => res.send("Welcome!"));
+app.get("/", (req, res, next) => res.send("Main Page."));
 app.use("/auth", require("./routes/auth"));
-app.get("*", (res) => res.send("404 PAGE NOT FOUND"));
+app.use("*", (req, res) => res.status(404).send("Page Not Found"));
 
 DB()
   .then((connect) => {
