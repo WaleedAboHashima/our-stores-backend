@@ -20,6 +20,10 @@ const User = mongoose.model(
         required: true,
         type: Number,
       },
+      government: {
+        required: true,
+        type: String,
+      },
       location: {
         required: true,
         type: String,

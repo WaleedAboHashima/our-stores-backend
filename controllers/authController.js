@@ -33,8 +33,8 @@ exports.LoginHandler = asyncHandler(async (req, res, next) => {
   });
   
   exports.RegisterHandler = asyncHandler(async (req, res, next) => {
-    const { username, email, phone, password, location } = req.body;
-    if (!username || !email || !phone || !password || !location)
+    const { username, email, phone, password, government, location } = req.body;
+    if (!username || !email || !phone || !password || !government || !location)
       res.status(404).send({ message: "All Fields Are Required." });
     await User.findOne({ $or: [{ phone }, { email }] }).then(async (user) => {
       if (user)
@@ -47,6 +47,7 @@ exports.LoginHandler = asyncHandler(async (req, res, next) => {
           email,
           phone,
           password: await bcrypt.hash(password, 10),
+          government,
           location,
         }).then((user) => {
           delete user._doc.password && delete user._doc.__v;
@@ -105,7 +106,7 @@ exports.LoginHandler = asyncHandler(async (req, res, next) => {
   exports.UpdatePassword = asyncHandler(async (req, res) => {
     const { id, newPassword } = req.body;
     if (!id || !newPassword)
-      res.status(404).json({ message: "All Fields Are Required." });
+      res.status(403).json({ message: "All Fields Are Required." });
     else {
       try {
         const password = await bcrypt.hash(newPassword, 10);

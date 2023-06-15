@@ -28,6 +28,10 @@ const Store = mongoose.model(
         required: true,
         type: String,
       },
+      location: {
+        required: true,
+        type: String,
+      }
     },
     { collection: "Stores" }
   )
