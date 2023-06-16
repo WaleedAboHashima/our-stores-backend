@@ -13,7 +13,7 @@ const governments = [
     ],
   },
   {
-    name: "Dhofar",
+    name: "Zofar",
     states: [
       { name: "Salalah" },
       { name: "Thumrait" },
@@ -42,36 +42,79 @@ const governments = [
     ],
   },
   {
-    name: "Albatinah",
-    states: [],
+    name: "Al-Dhahirah",
+    states: [{ name: "Ibri" }, { name: "Yanqul" }, { name: "Dhank" }],
   },
   {
-    name: "Albatinah North",
-    states: [],
+    name: "Al Batinah North",
+    states: [
+      { name: "Sohar" },
+      { name: "Shinas" },
+      { name: "Liwa" },
+      { name: "Saham" },
+      { name: "Al Khaboura" },
+      { name: "Suwayq" },
+    ],
   },
   {
     name: "Albatinah South",
-    states: [],
+    states: [
+      { name: "Rustaq" },
+      { name: "Al Awabi" },
+      { name: "Nakhal" },
+      { name: "Wadi Al Maawil" },
+      { name: "Barka" },
+      { name: "Al-Musannah" },
+    ],
   },
   {
-    name: "Buraimi",
-    states: [],
+    name: "Al Buraimi",
+    states: [
+      { name: "Al Buraimi State" },
+      { name: "Mahdah" },
+      { name: "As-Sunaynah" },
+    ],
   },
   {
-    name: "Alwastai",
-    states: [],
+    name: "Al Wusta",
+    states: [
+      { name: "Haima" },
+      { name: "Duqm" },
+      { name: "Mahout" },
+      { name: "Al Jazer" },
+      { name: "Ibra" },
+      { name: "Wadi Bani Khalid" },
+    ],
   },
   {
-    name: "North Sharqiyah",
-    states: [],
+    name: "Ash-Sharqiyah North",
+    states: [
+      { name: "Al-Qabi" },
+      { name: "Al-Mudhaibi" },
+      { name: "Bidiya" },
+      { name: "Dema Wa Thaieen" },
+      { name: "Ibra" },
+      { name: "Wadi Bani Khalid" },
+    ],
   },
   {
-    name: "South Sharqiyah",
-    states: [],
+    name: "Ash-Sharqiyah South",
+    states: [
+      { name: "Sur" },
+      { name: "Al-Kamil and Al-Wafi" },
+      { name: "Jalan Bani Bu Hassan" },
+      { name: "Jalan Bani Bu Ali" },
+      { name: "Masirah" },
+    ],
   },
   {
     name: "Musandam",
-    states: [],
+    states: [
+      { name: "Khasab" },
+      { name: "Bukha" },
+      { name: "Dibba Al-Bay'ah" },
+      { name: "Madha" },
+    ],
   },
 ];
 

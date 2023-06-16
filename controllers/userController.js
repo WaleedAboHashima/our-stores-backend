@@ -1,8 +1,31 @@
 const asyncHandler = require("express-async-handler");
 const Store = require("../models/Stores");
 const User = require("../models/User");
-const Governments = require("../models/Governments")
+const Governments = require("../models/Governments");
+
 exports.GetStores = asyncHandler(async (req, res) => {
+  const { government, state } = req.body;
+  if (!government || !state) {
+    res.status(403).json({ message: "All fields are required." });
+  } else {
+    try {
+      const stores = await Store.find({government, location: state});
+      if (stores) {
+        const storesWithoutPassword = stores.map((store) => {
+          const { __v, password, ...storesWithoutPassword } = store._doc;
+          return storesWithoutPassword;
+        });
+        res.status(200).json({ Stores: storesWithoutPassword });
+      } else {
+        res.status(200).json([]);
+      }
+    } catch (err) {
+      res.status(403).json({ message: err });
+    }
+  }
+});
+
+exports.GetNearStores = asyncHandler(async (req, res) => {
   const { id } = req.query;
   const { government, location } = req.body;
   if (!government || !location)
@@ -36,11 +59,10 @@ exports.GetStores = asyncHandler(async (req, res) => {
 
 exports.GetStates = asyncHandler(async (req, res, next) => {
   const { gove } = req.query;
-  const data = await Governments.findOne({ name: gove })
+  const data = await Governments.findOne({ name: gove });
   if (data) {
     res.status(200).json(data);
-  }
-  else {
-    res.status(200).json([])
+  } else {
+    res.status(200).json({states : []});
   }
 });
