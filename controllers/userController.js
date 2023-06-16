@@ -35,13 +35,12 @@ exports.GetStores = asyncHandler(async (req, res) => {
 });
 
 exports.GetStates = asyncHandler(async (req, res, next) => {
-  const { gove } = req.body;
+  const { gove } = req.query;
   const data = await Governments.findOne({ name: gove })
   if (data) {
     res.status(200).json(data);
   }
   else {
     res.status(200).json([])
-
   }
 });
