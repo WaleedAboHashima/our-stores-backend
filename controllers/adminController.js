@@ -7,14 +7,24 @@ const jwt = require("jsonwebtoken");
 const ApiError = require("../utils/ApiError");
 const ProductSchema = require("../models/Products");
 const Rules = require("../models/Rules");
-exports.AdminRegister = asnycHandler(async (req, res) => {
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET,
+});
+
+exports.AdminRegister = asnycHandler(async (req, res, next) => {
   const { email, phone, password, storeName, government, location } = req.body;
+  if (!req.files.logo) return next(new ApiError("Logo required.", 403));
   if ((!email || !phone || !password || !storeName || !government, !location)) {
     res.status(404).json({ message: "All Fields Are Required" });
   } else {
+    const logo = (await cloudinary.uploader.upload(req.files.logo[0].path))
+      .secure_url;
     await Admin.findOne({ $or: [{ email }, { phone }] }).then(async (admin) => {
       if (admin) {
-        console.log(admin);
         res
           .status(409)
           .json({ message: "Admin with this email or phone already exists." });
@@ -26,6 +36,7 @@ exports.AdminRegister = asnycHandler(async (req, res) => {
           storeName,
           government,
           location,
+          logo: logo.toString(),
         }).then((admin) => {
           delete admin._doc.password && delete admin._doc.__v;
           res.status(201).json(admin);
@@ -64,8 +75,9 @@ exports.AdminLogin = asnycHandler(async (req, res) => {
 });
 
 exports.AddProduct = asnycHandler(async (req, res, next) => {
-  const { name, category, price, quantity, sizes, description, imgs } =
-    req.body;
+  const { name, category, price, quantity, sizes, description } = req.body;
+  const { imgs } = req.files.img;
+  if (!imgs) return new (ApiError("Image Required", 403))();
   if (!name || !category || !price || !quantity || !description) {
     next(new ApiError("All Fields Are Required", 403));
   } else {
@@ -74,6 +86,12 @@ exports.AddProduct = asnycHandler(async (req, res, next) => {
       if (duplicate) {
         return next(new ApiError("Product Already Exists", 409));
       } else {
+        const imgs_path = await Promise.all(
+          req.files.imgs.map(async (img) => {
+            const uploadImg = await cloudinary.uploader.upload(img.path);
+            return uploadImg.secure_url;
+          })
+        );
         await ProductSchema.create({
           name,
           category,
@@ -81,6 +99,7 @@ exports.AddProduct = asnycHandler(async (req, res, next) => {
           quantity,
           sizes,
           description,
+          images: imgs_path,
         }).then((value, err) => {
           if (err) {
             return res.status(500).json({ message: err });
@@ -94,5 +113,3 @@ exports.AddProduct = asnycHandler(async (req, res, next) => {
     }
   }
 });
-
-

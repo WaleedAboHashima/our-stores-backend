@@ -9,9 +9,10 @@ const DB = require("./config/DBConfig");
 const verifyRoles = require("./middleware/verifyRoles");
 const allowedRoles = require("./config/allowedRoles");
 
-
-app.use(cors());
+app.use(express.static(path.join(__dirname, "images")));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 app.get("/", (req, res, next) => res.send("Main Page."));
 app.use("/auth", require("./routes/auth"));

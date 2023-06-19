@@ -31,6 +31,10 @@ const Store = mongoose.model(
       location: {
         required: true,
         type: String,
+      },
+      logo: {
+        required: true,
+        type: String,
       }
     },
     { collection: "Stores" }

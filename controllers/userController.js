@@ -95,7 +95,7 @@ exports.GetProfile = asyncHandler(async (req, res, next) => {
         delete foundUser._doc.__v &&
         delete foundUser._doc.role &&
         delete foundUser._doc.active;
-      res.status(200).json(foundUser);
+      res.status(200).json({ user: foundUser });
     } else {
       res.status(404).json({ message: "User not found." });
     }
