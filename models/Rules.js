@@ -7,5 +7,6 @@ module.exports = mongoose.model('Rules', new mongoose.Schema({
     },
     textBody: String,
 },
+{timestamps : true},
 {collection: "Rules"},
 ))

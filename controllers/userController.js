@@ -75,7 +75,11 @@ exports.GetRules = asyncHandler(async (req, res, next) => {
       delete rule._doc.__v &&
         delete rule._doc._id &&
         delete rule._doc.type &&
-        res.json(rule);
+        delete rule._doc.createdAt;
+      const isoDate = new Date(rule._doc.updatedAt).toISOString();
+      const [year, month, day] = isoDate.split("T")[0].split("-");
+      rule._doc.updatedAt = `${day}/${month}/${year}`; 
+      res.json(rule);
     })
     .catch((err) => next(new ApiError("Couldn't find rule", 404)));
 });
