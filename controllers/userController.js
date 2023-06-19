@@ -2,14 +2,14 @@ const asyncHandler = require("express-async-handler");
 const Store = require("../models/Stores");
 const User = require("../models/User");
 const Governments = require("../models/Governments");
-
+const Rules = require("../models/Rules");
 exports.GetStores = asyncHandler(async (req, res) => {
   const { government, state } = req.body;
   if (!government || !state) {
     res.status(403).json({ message: "All fields are required." });
   } else {
     try {
-      const stores = await Store.find({government, location: state});
+      const stores = await Store.find({ government, location: state });
       if (stores) {
         const storesWithoutPassword = stores.map((store) => {
           const { __v, password, ...storesWithoutPassword } = store._doc;
@@ -63,6 +63,10 @@ exports.GetStates = asyncHandler(async (req, res, next) => {
   if (data) {
     res.status(200).json(data);
   } else {
-    res.status(200).json({states : []});
+    res.status(200).json({ states: [] });
   }
+});
+
+exports.GetRules = asyncHandler(async (req, res, next) => {
+  res.json({ rules: await Rules.find({}) });
 });

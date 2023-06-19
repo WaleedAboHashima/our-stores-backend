@@ -18,7 +18,7 @@ const Founder = mongoose.model(
             type: String,
             default: 'Founder'
         }
-    }, {collection: "Founders"}) 
+    }, {collection: "Founders"})
 )
 
 module.exports = Founder;

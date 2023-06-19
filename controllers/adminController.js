@@ -6,10 +6,10 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const jwt = require("jsonwebtoken");
 const ApiError = require("../utils/ApiError");
 const ProductSchema = require("../models/Products");
-
+const Rules = require("../models/Rules");
 exports.AdminRegister = asnycHandler(async (req, res) => {
   const { email, phone, password, storeName, government, location } = req.body;
-  if (!email || !phone || !password || !storeName || !government, !location) {
+  if ((!email || !phone || !password || !storeName || !government, !location)) {
     res.status(404).json({ message: "All Fields Are Required" });
   } else {
     await Admin.findOne({ $or: [{ email }, { phone }] }).then(async (admin) => {
@@ -25,7 +25,7 @@ exports.AdminRegister = asnycHandler(async (req, res) => {
           password: await bcrypt.hash(password, 10),
           storeName,
           government,
-          location
+          location,
         }).then((admin) => {
           delete admin._doc.password && delete admin._doc.__v;
           res.status(201).json(admin);
@@ -83,7 +83,7 @@ exports.AddProduct = asnycHandler(async (req, res, next) => {
           description,
         }).then((value, err) => {
           if (err) {
-            return res.status(500).json({message: err});
+            return res.status(500).json({ message: err });
           } else {
             res.sendStatus(201);
           }
@@ -94,3 +94,5 @@ exports.AddProduct = asnycHandler(async (req, res, next) => {
     }
   }
 });
+
+

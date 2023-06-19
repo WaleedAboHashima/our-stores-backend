@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const asyncHandler = require("express-async-handler");
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const jwt = require("jsonwebtoken");
+const Rules = require("../models/Rules");
 
 exports.FounderLogin = asyncHandler(async (req, res) => {
   const { email, password, phone } = req.body;
@@ -27,5 +28,42 @@ exports.FounderLogin = asyncHandler(async (req, res) => {
         }
       }
     });
+  }
+});
+
+exports.FounderRegister = async (req, res) => {
+  const { email, phone, password } = req.body;
+  await Founder.create({
+    email,
+    phone,
+    password: await bcrypt.hash(password, 10),
+  });
+  res.sendStatus(201);
+};
+
+exports.AddRules = asyncHandler(async (req, res, next) => {
+  const { type } = req.query;
+  if (type === "termsofuse") {
+    const { textBody } = req.body;
+    if (!textBody)
+      return next(new ApiError("Please provide terms of use.", 400));
+    await Rules.findOne({ type }).then(async (rule) => {
+      if (rule)
+        await Rules.findOneAndUpdate({ type }, { textBody }).then((uses) =>
+          res.json(uses)
+        );
+      else
+        await Rules.create({ type, textBody }).then((uses) =>
+          res.json(uses)
+        );
+    });
+  }
+  else if (type === "privacy") {
+    const { textBody } = req.body;
+    if (!textBody) return next(new ApiError("Please provide privacy.", 400));
+    await Rules.findOne({ type }).then(async (rule) => {
+      if (rule) await Rules.findOneAndUpdate({ type }, { textBody }).then((privacy) => res.json(privacy));
+      else await Rules.create({ type, textBody }).then(privacy => res.json(privacy)); 
+    })
   }
 });
