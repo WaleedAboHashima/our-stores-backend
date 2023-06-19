@@ -3,6 +3,7 @@ const Store = require("../models/Stores");
 const User = require("../models/User");
 const Governments = require("../models/Governments");
 const Rules = require("../models/Rules");
+const ApiError = require("../utils/ApiError");
 exports.GetStores = asyncHandler(async (req, res) => {
   const { government, state } = req.body;
   if (!government || !state) {
@@ -68,5 +69,31 @@ exports.GetStates = asyncHandler(async (req, res, next) => {
 });
 
 exports.GetRules = asyncHandler(async (req, res, next) => {
-  res.json({ rules: await Rules.find({}) });
+  const { type } = req.query;
+  await Rules.findOne({ type })
+    .then(async (rule) => {
+      delete rule._doc.__v &&
+        delete rule._doc._id &&
+        delete rule._doc.type &&
+        res.json(rule);
+    })
+    .catch((err) => next(new ApiError("Couldn't find rule", 404)));
+});
+
+exports.GetProfile = asyncHandler(async (req, res, next) => {
+  const { userId } = req.params;
+  if (!userId) {
+    res.status(400).json({ message: "User Id Required." });
+  } else {
+    const foundUser = await User.findOne({ _id: userId });
+    if (foundUser) {
+      delete foundUser._doc.password &&
+        delete foundUser._doc.__v &&
+        delete foundUser._doc.role &&
+        delete foundUser._doc.active;
+      res.status(200).json(foundUser);
+    } else {
+      res.status(404).json({ message: "User not found." });
+    }
+  }
 });

@@ -43,7 +43,7 @@ exports.FounderRegister = async (req, res) => {
 
 exports.AddRules = asyncHandler(async (req, res, next) => {
   const { type } = req.query;
-  if (type === "termsofuse") {
+  if (type === "uses") {
     const { textBody } = req.body;
     if (!textBody)
       return next(new ApiError("Please provide terms of use.", 400));
@@ -65,5 +65,8 @@ exports.AddRules = asyncHandler(async (req, res, next) => {
       if (rule) await Rules.findOneAndUpdate({ type }, { textBody }).then((privacy) => res.json(privacy));
       else await Rules.create({ type, textBody }).then(privacy => res.json(privacy)); 
     })
+  }
+  else {
+    res.status(404).json({message: "Invalid Rules Type."})
   }
 });
