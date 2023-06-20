@@ -4,7 +4,8 @@ const asyncHandler = require("express-async-handler");
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const jwt = require("jsonwebtoken");
 const Rules = require("../models/Rules");
-
+const Users = require("../models/User");
+const Stores = require("../models/Stores");
 exports.FounderLogin = asyncHandler(async (req, res) => {
   const { email, password, phone } = req.body;
   if (!email || !password || !phone) {
@@ -41,6 +42,26 @@ exports.FounderRegister = async (req, res) => {
   res.sendStatus(201);
 };
 
+exports.GetAllUsers = asyncHandler(async (req, res, next) => {
+  await Users.find({}).then((users) => {
+    const allusers = users.map((user) => {
+      const { password, __v, active, role, ...rest } = user.toObject();
+      return rest;
+    });
+    res.status(200).json(allusers);
+  });
+});
+
+exports.GetAllStores = asyncHandler(async (req, res, next) => {
+  await Stores.find({}).then((stores) => {
+    const allstores = stores.map((store) => {
+      const { password, __v, role, ...rest } = store.toObject();
+      return rest;
+    });
+    res.status(200).json(allstores);
+  });
+});
+
 exports.AddRules = asyncHandler(async (req, res, next) => {
   const { type } = req.query;
   if (type === "uses") {
@@ -53,20 +74,22 @@ exports.AddRules = asyncHandler(async (req, res, next) => {
           res.json(uses)
         );
       else
-        await Rules.create({ type, textBody }).then((uses) =>
-          res.json(uses)
-        );
+        await Rules.create({ type, textBody }).then((uses) => res.json(uses));
     });
-  }
-  else if (type === "privacy") {
+  } else if (type === "privacy") {
     const { textBody } = req.body;
     if (!textBody) return next(new ApiError("Please provide privacy.", 400));
     await Rules.findOne({ type }).then(async (rule) => {
-      if (rule) await Rules.findOneAndUpdate({ type }, { textBody }).then((privacy) => res.json(privacy));
-      else await Rules.create({ type, textBody }).then(privacy => res.json(privacy)); 
-    })
-  }
-  else {
-    res.status(404).json({message: "Invalid Rules Type."})
+      if (rule)
+        await Rules.findOneAndUpdate({ type }, { textBody }).then((privacy) =>
+          res.json(privacy)
+        );
+      else
+        await Rules.create({ type, textBody }).then((privacy) =>
+          res.json(privacy)
+        );
+    });
+  } else {
+    res.status(404).json({ message: "Invalid Rules Type." });
   }
 });

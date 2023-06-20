@@ -3,7 +3,10 @@ const Store = require("../models/Stores");
 const User = require("../models/User");
 const Governments = require("../models/Governments");
 const Rules = require("../models/Rules");
+const Order = require("../models/Orders");
+const bcrypt = require("bcrypt");
 const ApiError = require("../utils/ApiError");
+
 exports.GetStores = asyncHandler(async (req, res) => {
   const { government, state } = req.body;
   if (!government || !state) {
@@ -78,14 +81,14 @@ exports.GetRules = asyncHandler(async (req, res, next) => {
         delete rule._doc.createdAt;
       const isoDate = new Date(rule._doc.updatedAt).toISOString();
       const [year, month, day] = isoDate.split("T")[0].split("-");
-      rule._doc.updatedAt = `${day}/${month}/${year}`; 
+      rule._doc.updatedAt = `${day}/${month}/${year}`;
       res.json(rule);
     })
     .catch((err) => next(new ApiError("Couldn't find rule", 404)));
 });
 
 exports.GetProfile = asyncHandler(async (req, res, next) => {
-  const { userId } = req.params;
+  const userId = req.user.id;
   if (!userId) {
     res.status(400).json({ message: "User Id Required." });
   } else {
@@ -99,5 +102,114 @@ exports.GetProfile = asyncHandler(async (req, res, next) => {
     } else {
       res.status(404).json({ message: "User not found." });
     }
+  }
+});
+
+exports.AddOrder = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+  const { name, description, price, totalPrice, quantity } = req.body;
+  if (!name || !description || !price || !totalPrice || !quantity) {
+    res.status(403).json({ message: "All Fields are required." });
+  } else {
+    await Order.create({
+      name,
+      description,
+      price,
+      totalPrice,
+      quantity,
+      user: userId,
+    }).then((order) => {
+      res.status(201).json(order);
+    });
+  }
+});
+
+exports.GetOrderHistory = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+  if (!userId) {
+    res.status(400).json({ message: "User Id Required." });
+  } else {
+    const foundUser = await Order.find({ user: userId });
+    if (foundUser) {
+      const orders = foundUser.map((order) => {
+        const { __v, updatedAt, user, ...orders } = order._doc;
+        return orders;
+      });
+      res.status(200).json({ orderDetails: orders });
+    } else {
+      res.status(404).json({ message: "User Not Found." });
+    }
+  }
+});
+
+exports.UpdateUserInfo = asyncHandler(async (req, res, next) => {
+  const type = req.query;
+  const userId = req.user.id;
+  if (type.username) {
+    await User.findById(userId).then(async (user) => {
+      if (user) {
+        await User.findByIdAndUpdate(userId, { username: type.username });
+        res.sendStatus(200);
+      } else res.status(404).json({ message: "User Not Found." });
+    });
+  } else if (type.password) {
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword)
+      res.status(403).json({ message: "All fields are required." });
+    await User.findById(userId).then(async (user) => {
+      if (user) {
+        const matching = await bcrypt.compare(oldPassword, user.password);
+        if (matching) {
+          await User.findByIdAndUpdate(userId, {
+            password: await bcrypt.hash(newPassword, 10),
+          });
+          res.sendStatus(200);
+        } else {
+          res.status(403).json({ message: "Password doesnt match" });
+        }
+      }
+    });
+  } else if (type.email) {
+    await User.findById(userId).then(async (user) => {
+      if (user) {
+        const duplicate = await User.findOne({ email: type.email });
+        if (duplicate)
+          res
+            .status(409)
+            .json({ message: "A user already exists with this email." });
+        else {
+          await User.findByIdAndUpdate(userId, { email: type.email });
+          res.sendStatus(200);
+        }
+      } else res.status(404).json({ message: "User Not Found." });
+    });
+  } else if (type.government) {
+    await User.findById(userId).then(async (user) => {
+      if (user) {
+        await User.findByIdAndUpdate(userId, { government: type.government });
+        res.sendStatus(200);
+      } else res.status(404).json({ message: "User Not Found." });
+    });
+  } else if (type.location) {
+    await User.findById(userId).then(async (user) => {
+      if (user) {
+        await User.findByIdAndUpdate(userId, { location: type.location });
+        res.sendStatus(200);
+      } else res.status(404).json({ message: "User Not Found." });
+    });
+  } else if (type.phone) {
+    await User.findById(userId).then(async (user) => {
+      if (user) {
+        const duplicate = await User.findOne({ phone: type.phone });
+        if (duplicate) {
+          res
+            .status(409)
+            .json({ message: "A user with this phone already exists." });
+        } else {
+          await User.findByIdAndUpdate(userId, { phone: type.phone });
+          res.sendStatus(200);
+        }
+      } else res.status(404).json({ message: "User Not Found." });
+    });
   }
 });

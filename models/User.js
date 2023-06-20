@@ -36,6 +36,11 @@ const User = mongoose.model(
         type: Boolean,
         default: false,
       },
+      secret: {
+        type: String,
+        default: "",
+      }
+      
     },
     { collection: "Users" }
   )

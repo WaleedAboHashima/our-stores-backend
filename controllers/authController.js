@@ -50,6 +50,7 @@ exports.RegisterHandler = asyncHandler(async (req, res, next) => {
         password: await bcrypt.hash(password, 10),
         government,
         location,
+        secret: "*".repeat(password.length)
       }).then((user) => {
         delete user._doc.password && delete user._doc.__v;
         res.status(201).json(user);
