@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const ApiError = require("../utils/ApiError");
 const ProductSchema = require("../models/Products");
 const Rules = require("../models/Rules");
+const Store = require("../models/Stores");
 const cloudinary = require("cloudinary").v2;
 
 cloudinary.config({
@@ -75,38 +76,53 @@ exports.AdminLogin = asnycHandler(async (req, res) => {
 });
 
 exports.AddProduct = asnycHandler(async (req, res, next) => {
-  const { name, category, price, quantity, sizes, description } = req.body;
-  const { imgs } = req.files.img;
-  if (!imgs) return new (ApiError("Image Required", 403))();
-  if (!name || !category || !price || !quantity || !description) {
+  const storeId = req.user.id;
+  const { productName, category, price, quantity, sizes, description } =
+    req.body;
+  console.log(sizes)
+  const imgs = req.files.imgs;
+  if (!imgs) next(new ApiError("Image Required", 403));
+  if (!productName || !category || !price || !quantity || !description) {
     next(new ApiError("All Fields Are Required", 403));
   } else {
     try {
-      const duplicate = await ProductSchema.findOne({ name, category }).exec();
-      if (duplicate) {
-        return next(new ApiError("Product Already Exists", 409));
-      } else {
-        const imgs_path = await Promise.all(
-          req.files.imgs.map(async (img) => {
-            const uploadImg = await cloudinary.uploader.upload(img.path);
-            return uploadImg.secure_url;
-          })
-        );
-        await ProductSchema.create({
-          name,
+      const store = await Store.findById(storeId);
+      if (!store) next(new ApiError("User not found.", 404));
+      else {
+        const duplicate = await ProductSchema.findOne({
+          productName,
           category,
-          price,
-          quantity,
-          sizes,
-          description,
-          images: imgs_path,
-        }).then((value, err) => {
-          if (err) {
-            return res.status(500).json({ message: err });
-          } else {
-            res.sendStatus(201);
-          }
-        });
+        }).exec();
+        if (duplicate) {
+          return next(new ApiError("Product Already Exists", 409));
+        } else {
+          const imgs_path = await Promise.all(
+            imgs.map(async (img) => {
+              const uploadImg = await cloudinary.uploader.upload(img.path);
+              return uploadImg.secure_url;
+            })
+          );
+          const newProduct = await ProductSchema.create({
+            store,
+            productName,
+            category,
+            price,
+            quantity,
+            sizes,
+            description,
+            images: imgs_path,
+          });
+
+          await Store.findByIdAndUpdate(storeId, {
+            $push: { products: newProduct._id },
+          }).then((value, err) => {
+            if (err) {
+              return res.status(500).json({ message: err });
+            } else {
+              res.sendStatus(201);
+            }
+          });
+        }
       }
     } catch (err) {
       return next(new ApiError(err, 403));

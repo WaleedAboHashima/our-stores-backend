@@ -35,6 +35,9 @@ const Store = mongoose.model(
       logo: {
         required: true,
         type: String,
+      },
+      products: {
+        type: Array,
       }
     },
     { collection: "Stores" }

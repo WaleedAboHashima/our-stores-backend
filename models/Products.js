@@ -4,7 +4,8 @@ const Product = mongoose.model(
   "Products",
   new mongoose.Schema(
     {
-      name: {
+      store: { type:  mongoose.Schema.Types.ObjectId, ref: 'Stores' },
+      productName: {
         required: [true, "Please Enter The Product Name"],
         type: "String",
       },
@@ -21,12 +22,18 @@ const Product = mongoose.model(
         type: "Number",
       },
       sizes: {
-        type: "String",
-        default: "",
+        type: Array,
+        default: [],
+        required: [true, "Please Enter The Product Size"],
       },
       description: {
         type: "String",
         required: [true, "Please Enter The Product Description"],
+      },
+      fav: {
+        type: "Boolean",
+        required: false,
+        default: false,
       },
       images: Array,
     },
