@@ -376,9 +376,10 @@ exports.DeleteProductFromCart = asyncHandler(async (req, res, next) => {
 exports.ChangeQuantity = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const { productId } = req.params;
-  const { quantity } = req.body;
-  if (!quantity) {
-    res.status(403).json({ message: "Quantity not specified." });
+  const { quantity, size } = req.body;
+
+  if (!quantity || !size) {
+    res.status(403).json({ message: "All fields are required." });
   } else {
     try {
       const cart = await Cart.findOne({ user: userId });
@@ -386,14 +387,14 @@ exports.ChangeQuantity = asyncHandler(async (req, res, next) => {
         res.status(404).json({ message: "Cart not found" });
       } else {
         const productIndex = cart.products.findIndex(
-          (p) => p._id.toString() === productId
+          (p) => p._id.toString() === productId && p.sizes.includes(size)
         );
         if (productIndex === -1) {
           res.status(404).json({ message: "Product Not Found" });
         } else {
           const product = cart.products[productIndex];
           await Cart.updateOne(
-            { _id: cart._id, "products._id": product._id },
+            { _id: cart._id, "products._id": product._id, "products.sizes" : product.sizes[0] },
             {
               $set: {
                 "products.$.quantity": quantity,
