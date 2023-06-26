@@ -21,6 +21,10 @@ const Product = mongoose.model(
         required: [true, "Please Enter The Product Quantity"],
         type: "Number",
       },
+      totalPrice: {
+        required: [true, "Please Enter The Product Total Price"],
+        type: "Number",
+      },
       sizes: {
         type: Array,
         default: [],

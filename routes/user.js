@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const {GetStores, GetStates, GetNearStores, GetRules, GetProfile, GetOrderHistory, AddOrder, UpdateUserInfo, GetAllStoreProductsAndCategory, GetProduct, AddToCart} = require("../controllers/userController");
+const {GetStores, GetStates, GetNearStores, GetRules, GetProfile, GetOrderHistory, AddOrder, UpdateUserInfo, GetAllStoreProductsAndCategory, GetProduct, AddToCart, GetCart, DeleteCart, DeleteProductFromCart, ChangeQuantity} = require("../controllers/userController");
 
 //General
 router.get("/states", GetStates)
@@ -25,4 +25,8 @@ router.post('/addOrder', AddOrder)
 
 //Carts
 router.post('/addtocart', AddToCart)
+router.get('/getcart', GetCart)
+router.delete('/deletecart/:cartId', DeleteCart)
+router.delete('/deleteproduct/:productId', DeleteProductFromCart)
+router.put('/changequantity/:productId', ChangeQuantity)
 module.exports = router;

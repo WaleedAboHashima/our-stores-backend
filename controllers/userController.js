@@ -262,36 +262,141 @@ exports.GetProduct = asyncHandler(async (req, res, next) => {
 });
 
 //Carts
-
 exports.AddToCart = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const { productId } = req.query;
+  const { size } = req.body;
   const product = await Product.findById(productId);
-  if (!product) res.status(404).json({ message: "Product not found." });
+  if (!size) res.status(400).json({ message: "Size Required." });
   else {
+    if (!product) res.status(404).json({ message: "Product not found." });
+    else {
+      const cart = await Cart.findOne({ user: userId });
+      if (!cart) {
+        const newProduct = {
+          ...product.toObject(),
+          quantity: 1,
+          price: product.price,
+          totalPrice: 1 * product.price,
+          sizes: [size],
+        };
+        await Cart.create({ user: userId, products: [newProduct] }).then(
+          (cart) => res.status(201).json(cart)
+        );
+      } else {
+        const index = cart.products.findIndex(
+          (p) => p._id.toString() === productId && p.sizes.includes(size)
+        );
+        if (index >= 0) {
+          const productToUpdate = cart.products[index];
+          await Cart.findByIdAndUpdate(cart._id, {
+            $set: {
+              [`products.${index}.quantity`]: (productToUpdate.quantity += 1),
+              [`products.${index}.totalPrice`]:
+                productToUpdate.quantity * product.price,
+            },
+          });
+          res.sendStatus(200);
+        } else {
+          const newProduct = {
+            ...product.toObject(),
+            quantity: 1,
+            price: product.price,
+            totalPrice: 1 * product.price,
+            sizes: [size],
+          };
+          cart.products.push(newProduct);
+          await cart.save();
+          res.sendStatus(200);
+        }
+      }
+    }
+  }
+});
+
+exports.GetCart = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+  const cart = await Cart.findOne({ user: userId });
+  if (cart) {
+    res.status(200).json(cart);
+  } else {
+    res.status(404).json({ message: "Cart not found" });
+  }
+});
+
+exports.DeleteCart = asyncHandler(async (req, res, next) => {
+  const { cartId } = req.params;
+  const cart = await Cart.findById(cartId);
+  if (cart) {
+    await Cart.findByIdAndRemove(cartId);
+    res.sendStatus(200);
+  } else {
+    res.status(404).json({ message: "Cart not found" });
+  }
+});
+
+exports.DeleteProductFromCart = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+  const { productId } = req.params;
+  try {
     const cart = await Cart.findOne({ user: userId });
     if (!cart) {
-      const newProduct = product;
-      newProduct.quantity = 1;
-      newProduct.price = product.price;
-      newProduct.sizes = [];
-      newProduct.description = product.description;
-      newProduct.images = product.images;
-      await Cart.create({ user: userId, products: newProduct }).then((cart) =>
-        res.status(201).json(cart)
-      );
+      res.status(404).json({ error: "Cart not found." });
     } else {
-      const duplicate = cart.products.filter(
+      const productIndex = cart.products.findIndex(
         (p) => p._id.toString() === productId
       );
-      if (duplicate) {
-        const newProduct = duplicate;
-        newProduct.quantity = duplicate.quantity + 1;
-        newProduct.price = duplicate.price;
-        newProduct.description = duplicate.description;
-        newProduct.images = duplicate.images;
-        // await Cart.findByIdAndUpdate
+      if (productIndex === -1) {
+        res.status(404).json({ message: `Product not found in cart.` });
+      } else {
+        cart.products.splice(productIndex, 1);
+        if (cart.products.length === 0) {
+          await Cart.findByIdAndDelete(cart._id);
+        } else {
+          await cart.save();
+        }
+        res.json({
+          message: `Product was removed from cart.`,
+        });
       }
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: `Error removing product with ID ${productId} from cart.`,
+    });
+  }
+});
+
+exports.ChangeQuantity = asyncHandler(async (req, res, next) => {
+  const userId = req.user.id;
+  const { productId } = req.params;
+  const { quantity } = req.body;
+  if (!quantity) {
+    res.status(403).json({ message: "Quantity not specified." });
+  } else {
+    try {
+      const cart = await Cart.findOne({ user: userId });
+      if (!cart) {
+        res.status(404).json({ message: "Cart not found" });
+      } else {
+        const productIndex = cart.products.findIndex(
+          (p) => p._id.toString() === productId
+        );
+        if (productIndex === -1) {
+          res.status(404).json({ message: "Product Not Found" });
+        } else {
+          const product = cart.products[productIndex];
+        await Cart.updateOne(
+          { _id: cart._id, "products._id": product._id },
+          { $set: { "products.$.quantity": quantity  , "products.$.totalPrice" : quantity * product.price} }
+          );
+          res.sendStatus(200);
+        }
+      }
+    } catch (err) {
+      console.log(err);
+      res.status(500).json({ message: "Error changing quantity." });
     }
   }
 });
