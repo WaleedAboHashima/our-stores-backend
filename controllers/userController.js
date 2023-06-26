@@ -320,7 +320,7 @@ exports.GetCart = asyncHandler(async (req, res, next) => {
   if (cart) {
     res.status(200).json(cart);
   } else {
-    res.status(200).json({products : []});
+    res.status(200).json({ products: [] });
   }
 });
 
@@ -338,33 +338,38 @@ exports.DeleteCart = asyncHandler(async (req, res, next) => {
 exports.DeleteProductFromCart = asyncHandler(async (req, res, next) => {
   const userId = req.user.id;
   const { productId } = req.params;
-  try {
-    const cart = await Cart.findOne({ user: userId });
-    if (!cart) {
-      res.status(404).json({ error: "Cart not found." });
-    } else {
-      const productIndex = cart.products.findIndex(
-        (p) => p._id.toString() === productId
-      );
-      if (productIndex === -1) {
-        res.status(404).json({ message: `Product not found in cart.` });
+  const { size } = req.body;
+  if (!size) {
+    res.status(403).json({ message: "Size is required." });
+  } else {
+    try {
+      const cart = await Cart.findOne({ user: userId });
+      if (!cart) {
+        res.status(404).json({ error: "Cart not found." });
       } else {
-        cart.products.splice(productIndex, 1);
-        if (cart.products.length === 0) {
-          await Cart.findByIdAndDelete(cart._id);
+        const productIndex = cart.products.findIndex(
+          (p) => p._id.toString() === productId && p.sizes.includes(size)
+        );
+        if (productIndex === -1) {
+          res.status(404).json({ message: `Product not found in cart.` });
         } else {
-          await cart.save();
+          cart.products.splice(productIndex, 1);
+          if (cart.products.length === 0) {
+            await Cart.findByIdAndDelete(cart._id);
+          } else {
+            await cart.save();
+          }
+          res.json({
+            message: `Product was removed from cart.`,
+          });
         }
-        res.json({
-          message: `Product was removed from cart.`,
-        });
       }
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        error: `Error removing product with ID ${productId} from cart.`,
+      });
     }
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      error: `Error removing product with ID ${productId} from cart.`,
-    });
   }
 });
 
@@ -387,9 +392,14 @@ exports.ChangeQuantity = asyncHandler(async (req, res, next) => {
           res.status(404).json({ message: "Product Not Found" });
         } else {
           const product = cart.products[productIndex];
-        await Cart.updateOne(
-          { _id: cart._id, "products._id": product._id },
-          { $set: { "products.$.quantity": quantity  , "products.$.totalPrice" : quantity * product.price} }
+          await Cart.updateOne(
+            { _id: cart._id, "products._id": product._id },
+            {
+              $set: {
+                "products.$.quantity": quantity,
+                "products.$.totalPrice": quantity * product.price,
+              },
+            }
           );
           res.sendStatus(200);
         }
