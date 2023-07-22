@@ -12,6 +12,10 @@ const Cart = mongoose.model(
         type: Array,
         required: true,
       },
+      totalPrice: {
+        type: Number,
+        default: 0,
+      }
     },
     { collection: "Carts" }
   )

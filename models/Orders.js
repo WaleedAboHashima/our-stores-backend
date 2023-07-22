@@ -28,6 +28,15 @@ const Orders = mongoose.model(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Users',
         required: true,
+      },
+      archived: {
+        type: "Boolean",
+        required: false,
+        default: false,
+      },
+      SR: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Users",
       }
     },
     { timestamps: true },

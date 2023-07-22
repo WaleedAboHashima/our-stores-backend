@@ -17,7 +17,9 @@ app.use(cors());
 app.get("/", (req, res, next) => res.send("Main Page."));
 app.use("/auth", require("./routes/auth"));
 app.use("/user", verifyRoles(allowedRoles.User), require("./routes/user"));
+app.use("/sr", verifyRoles(allowedRoles.SR), require("./routes/sr"));
 app.use("/store", verifyRoles(allowedRoles.Store), require("./routes/admin"));
+app.use("/main", verifyRoles(allowedRoles.Store, allowedRoles.Founder, allowedRoles.User, allowedRoles.SR), require("./routes/main"));
 app.use(
   "/founder",
   verifyRoles(allowedRoles.Founder),

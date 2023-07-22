@@ -6,12 +6,14 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const asyncHandler = require("express-async-handler");
 const ApiError = require("../utils/ApiError");
 const cloudinary = require("cloudinary").v2;
+
 exports.LoginHandler = asyncHandler(async (req, res, next) => {
   const { email, phone, password } = req.body;
   if (!email || !phone || !password)
     res.status(404).send({ message: "All Fields Are Required" });
   else {
     await User.findOne({ email, phone })
+      .populate("store")
       .then(async (user) => {
         if (!user) res.status(404).send({ message: "User Not Found" });
         else {
@@ -19,6 +21,10 @@ exports.LoginHandler = asyncHandler(async (req, res, next) => {
           if (!matching) {
             res.status(403).send({ message: "Password doesn't match" });
           } else {
+            user.store &&
+              delete user.store._doc.password &&
+              delete user.store._doc.products &&
+              delete user.store._doc.__v;
             delete user._doc.password && delete user._doc.__v;
             const token = jwt.sign(
               { id: user.id, role: user.role },
@@ -50,7 +56,7 @@ exports.RegisterHandler = asyncHandler(async (req, res, next) => {
         password: await bcrypt.hash(password, 10),
         government,
         location,
-        secret: "*".repeat(password.length)
+        secret: "*".repeat(password.length),
       }).then((user) => {
         delete user._doc.password && delete user._doc.__v;
         res.status(201).json(user);

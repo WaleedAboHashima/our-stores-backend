@@ -39,8 +39,11 @@ const User = mongoose.model(
       secret: {
         type: String,
         default: "",
-      }
-      
+      },
+      store: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Stores",
+      },
     },
     { collection: "Users" }
   )

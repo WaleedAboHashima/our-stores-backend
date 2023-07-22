@@ -9,8 +9,16 @@ const Product = mongoose.model(
         required: [true, "Please Enter The Product Name"],
         type: "String",
       },
+      productNameAR: {
+        required: [true, "Please Enter The Product NameAR"],
+        type: "String",
+      },
       category: {
         required: [true, "Please Enter The Product Category"],
+        type: "String",
+      },
+      categoryAR: {
+        required: [true, "Please Enter The Product CategoryAR"],
         type: "String",
       },
       price: {
@@ -22,7 +30,6 @@ const Product = mongoose.model(
         type: "Number",
       },
       totalPrice: {
-        required: [true, "Please Enter The Product Total Price"],
         type: "Number",
       },
       sizes: {
@@ -41,7 +48,7 @@ const Product = mongoose.model(
       },
       images: Array,
     },
-    { collection: "Products" }
+    {timestamps: true},
   )
 );
 
